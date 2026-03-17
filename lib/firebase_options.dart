@@ -24,12 +24,7 @@ class DefaultFirebaseOptions {
 
   // ── Replace these with your actual values from Firebase Console ──
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'YOUR_WEB_API_KEY',
-    appId: 'YOUR_WEB_APP_ID',
-    messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',
-    projectId: 'YOUR_PROJECT_ID',
-    authDomain: 'YOUR_PROJECT_ID.firebaseapp.com',
-    storageBucket: 'YOUR_PROJECT_ID.appspot.com',
+
   );
 
   static const FirebaseOptions android = FirebaseOptions(

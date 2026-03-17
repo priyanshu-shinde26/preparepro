@@ -10,6 +10,7 @@ import '../../../core/providers/theme_provider.dart';
 import '../../../widgets/gradient_card.dart';
 import '../../../services/firestore_service.dart';
 import '../../../services/auth_service.dart';
+import '../../../services/api_service.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -20,6 +21,26 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   final _firestoreService = FirestoreService();
+  final _apiService = ApiService();
+  bool _serverReady = false;
+  bool _serverPinging = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _wakeUpServer();
+  }
+
+  Future<void> _wakeUpServer() async {
+    setState(() => _serverPinging = true);
+    final ok = await _apiService.pingServer();
+    if (mounted) {
+      setState(() {
+        _serverReady = ok;
+        _serverPinging = false;
+      });
+    }
+  }
 
   final List<_FeatureItem> _features = [
     _FeatureItem(
@@ -81,7 +102,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             expandedHeight: 180,
             floating: false,
             pinned: true,
-            backgroundColor: cs.background,
+            backgroundColor: cs.surface,
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
                 decoration: BoxDecoration(
@@ -191,6 +212,81 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Server status banner
+                  if (_serverPinging)
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: AppTheme.accentOrange.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppTheme.accentOrange.withOpacity(0.3)),
+                      ),
+                      child: Row(
+                        children: [
+                          SizedBox(
+                            width: 14, height: 14,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(AppTheme.accentOrange),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              'Waking up AI server... first load takes ~30 sec',
+                              style: GoogleFonts.sora(fontSize: 12, color: AppTheme.accentOrange),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  if (!_serverPinging && !_serverReady)
+                    GestureDetector(
+                      onTap: _wakeUpServer,
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 16),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: AppTheme.accentRed.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppTheme.accentRed.withOpacity(0.3)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.warning_rounded, color: AppTheme.accentRed, size: 16),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                'Backend offline. Tap to retry.',
+                                style: GoogleFonts.sora(fontSize: 12, color: AppTheme.accentRed),
+                              ),
+                            ),
+                            const Icon(Icons.refresh_rounded, color: AppTheme.accentRed, size: 16),
+                          ],
+                        ),
+                      ),
+                    ),
+                  if (!_serverPinging && _serverReady)
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: AppTheme.accentGreen.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppTheme.accentGreen.withOpacity(0.3)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.check_circle_rounded, color: AppTheme.accentGreen, size: 16),
+                          const SizedBox(width: 10),
+                          Text(
+                            'AI server is ready!',
+                            style: GoogleFonts.sora(fontSize: 12, color: AppTheme.accentGreen),
+                          ),
+                        ],
+                      ),
+                    ),
                   // Stats Row
                   _buildStatsRow(),
                   const SizedBox(height: 28),
@@ -207,7 +303,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     style: GoogleFonts.sora(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
-                      color: cs.onBackground,
+                      color: cs.onSurface,
                     ),
                   ).animate().fadeIn(delay: 200.ms),
                   const SizedBox(height: 4),
