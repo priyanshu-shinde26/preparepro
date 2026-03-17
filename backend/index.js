@@ -5,8 +5,9 @@ const cors = require('cors');
 const Groq = require('groq-sdk');
 
 // ── Firebase Admin (for verifying Flutter user tokens) ───────────────────────
-// serviceAccountKey.json is downloaded from Firebase Console
-const serviceAccount = require('./serviceAccountKey.json');
+// FIREBASE_SERVICE_ACCOUNT is set in Render dashboard as an environment variable
+// It contains the full JSON content of serviceAccountKey.json
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
