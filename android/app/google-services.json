@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "127766338564",
+    "project_id": "preparepro-app",
+    "storage_bucket": "preparepro-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:127766338564:android:c2b2a5e02d7ecc5a776951",
+        "android_client_info": {
+          "package_name": "com.preparepro.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "127766338564-gviqo8hjs8rsb86m0d0src83vcisbg7v.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "REMOVEDU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "127766338564-gviqo8hjs8rsb86m0d0src83vcisbg7v.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
