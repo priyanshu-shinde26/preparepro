@@ -140,7 +140,8 @@ app.post('/generateAptitude', authenticate, async (req, res) => {
     'Respond ONLY with a valid JSON array. No markdown, no code blocks, no explanation.';
 
   const userPrompt =
-    `Generate ${count} unique aptitude questions on: "${topic}". ` +
+    `[Time: ${Date.now()}] Generate ${count} completely unique, fresh, and different aptitude questions on: "${topic}". ` +
+    `Ensure these questions do not repeat from previous requests. ` +
     `Return ONLY a raw JSON array (no markdown, no \`\`\`json): ` +
     `[{"id":"1","question":"Q?","options":["A","B","C","D"],"correctIndex":0,"explanation":"Why A is correct","topic":"${topic}","difficulty":"Medium"}]`;
 
@@ -165,7 +166,8 @@ app.post('/generateQuiz', authenticate, async (req, res) => {
     'Respond ONLY with a valid JSON array. No markdown, no code blocks, no explanation.';
 
   const userPrompt =
-    `Generate ${count} MCQ questions on ${subject} - ${subtopic}. ` +
+    `[Time: ${Date.now()}] Generate ${count} completely unique, fresh, and different MCQ questions on ${subject} - ${subtopic}. ` +
+    `Ensure these questions do not repeat from previous requests. ` +
     `Mix of easy/medium/hard. Return ONLY raw JSON array: ` +
     `[{"id":"1","question":"Q?","options":["A","B","C","D"],"correctIndex":0,"explanation":"Why correct","topic":"${subtopic}","difficulty":"Medium"}]`;
 
@@ -190,7 +192,8 @@ app.post('/generateInterview', authenticate, async (req, res) => {
     'Respond ONLY with a valid JSON array. No markdown, no code blocks, no explanation.';
 
   const userPrompt =
-    `Generate 10 expected ${interviewType} questions for ${jobRole}. ` +
+    `[Time: ${Date.now()}] Generate 10 completely unique, fresh, and different expected ${interviewType} questions for ${jobRole}. ` +
+    `Ensure these questions do not repeat from previous requests. ` +
     `Return ONLY raw JSON array: ` +
     `[{"question":"Q?","answer":"Detailed answer","tip":"Pro tip","category":"${interviewType}"}]`;
 
@@ -216,18 +219,17 @@ app.post('/generateResume', authenticate, async (req, res) => {
 
   const systemPrompt =
     'You are an expert resume writer for campus placements. ' +
-    'Create ATS-optimized professional resumes in plain text format.';
+    'Create ATS-optimized professional resumes in proper Markdown format using # and ## for headers and - for bullet points, with clear spacing and bold **text** for emphasis.';
 
   const userPrompt =
     `Create an ATS-optimized resume:\n` +
     `Name: ${name}\nEmail: ${email}\nPhone: ${phone}\n` +
     `Target Role: ${targetRole}\nTarget Company: ${targetCompany || 'General'}\n` +
-    `Summary: ${summary || 'Generate a strong summary'}\n` +
+    `Summary: ${summary || 'Generate a strong professional summary'}\n` +
     `Skills: ${skills}\nEducation: ${education}\n` +
     `Experience: ${experience || 'Fresher'}\nProjects: ${projects}\n\n` +
-    `Write complete resume in plain text with sections: ` +
-    `Contact Info, Professional Summary, Technical Skills, Education, ` +
-    `Work Experience, Projects, Achievements.`;
+    `Write the complete resume strictly in MARKDOWN format. Use # for Name, ## for section headings (Contact Info, Summary, Skills, Education, Experience, Projects), and bullet points (-) for details. Do not use code blocks.\n` +
+    `Timestamp: ${Date.now()}`;
 
   try {
     const resume = await callGroq(systemPrompt, userPrompt, 2500);
@@ -251,7 +253,8 @@ app.post('/generateCompany', authenticate, async (req, res) => {
   const userPrompt =
     `Company placement guide for ${company} - ${role} role. ` +
     `Return ONLY raw JSON object: ` +
-    `{"overview":"company overview","selectionProcess":"rounds description","faqs":"top 10 FAQs with answers","importantTopics":"key topics to study","tips":"tips to crack placement"}`;
+    `{"overview":"company overview","selectionProcess":"rounds description","faqs":"top 10 FAQs with answers","importantTopics":"key topics to study","tips":"tips to crack placement"}\n` +
+    `CRITICAL: Every value MUST be a single long string formatted with \\n for line breaks. DO NOT return any JSON arrays.`;
 
   try {
     const raw = await callGroq(systemPrompt, userPrompt, 3000);
