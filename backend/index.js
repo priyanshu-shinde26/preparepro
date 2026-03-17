@@ -143,10 +143,11 @@ app.post('/generateAptitude', authenticate, async (req, res) => {
     `[Time: ${Date.now()}] Generate ${count} completely unique, fresh, and different aptitude questions on: "${topic}". ` +
     `Ensure these questions do not repeat from previous requests. ` +
     `Return ONLY a raw JSON array (no markdown, no \`\`\`json): ` +
-    `[{"id":"1","question":"Q?","options":["A","B","C","D"],"correctIndex":0,"explanation":"Why A is correct","topic":"${topic}","difficulty":"Medium"}]`;
+    `[{"id":"1","question":"Q?","options":["A","B","C","D"],"correctIndex":0,"explanation":"Why A is correct","topic":"${topic}","difficulty":"Medium"}]\n` +
+    `CRITICAL INSTRUCTION: You must strictly close the JSON array with ] and do not output anything else.`;
 
   try {
-    const raw = await callGroq(systemPrompt, userPrompt);
+    const raw = await callGroq(systemPrompt, userPrompt, 3000);
     const questions = parseJsonArray(raw);
     res.json({ questions });
   } catch (err) {
@@ -169,10 +170,11 @@ app.post('/generateQuiz', authenticate, async (req, res) => {
     `[Time: ${Date.now()}] Generate ${count} completely unique, fresh, and different MCQ questions on ${subject} - ${subtopic}. ` +
     `Ensure these questions do not repeat from previous requests. ` +
     `Mix of easy/medium/hard. Return ONLY raw JSON array: ` +
-    `[{"id":"1","question":"Q?","options":["A","B","C","D"],"correctIndex":0,"explanation":"Why correct","topic":"${subtopic}","difficulty":"Medium"}]`;
+    `[{"id":"1","question":"Q?","options":["A","B","C","D"],"correctIndex":0,"explanation":"Why correct","topic":"${subtopic}","difficulty":"Medium"}]\n` +
+    `CRITICAL INSTRUCTION: You must strictly close the JSON array with ] and do not output anything else.`;
 
   try {
-    const raw = await callGroq(systemPrompt, userPrompt);
+    const raw = await callGroq(systemPrompt, userPrompt, 3000);
     const questions = parseJsonArray(raw);
     res.json({ questions });
   } catch (err) {
@@ -195,10 +197,11 @@ app.post('/generateInterview', authenticate, async (req, res) => {
     `[Time: ${Date.now()}] Generate 10 completely unique, fresh, and different expected ${interviewType} questions for ${jobRole}. ` +
     `Ensure these questions do not repeat from previous requests. ` +
     `Return ONLY raw JSON array: ` +
-    `[{"question":"Q?","answer":"Detailed answer","tip":"Pro tip","category":"${interviewType}"}]`;
+    `[{"question":"Q?","answer":"Detailed answer","tip":"Pro tip","category":"${interviewType}"}]\n` +
+    `CRITICAL INSTRUCTION: You must strictly close the JSON array with ] and do not output anything else.`;
 
   try {
-    const raw = await callGroq(systemPrompt, userPrompt, 3000);
+    const raw = await callGroq(systemPrompt, userPrompt, 3500);
     const questions = parseJsonArray(raw);
     res.json({ questions });
   } catch (err) {
@@ -218,21 +221,28 @@ app.post('/generateResume', authenticate, async (req, res) => {
   } = req.body;
 
   const systemPrompt =
-    'You are an expert resume writer for campus placements. ' +
-    'Create ATS-optimized professional resumes in proper Markdown format using # and ## for headers and - for bullet points, with clear spacing and bold **text** for emphasis.';
+    'You are a world-class executive resume writer and ATS optimization expert. ' +
+    'Your goal is to transform the provided details into a highly professional, well-written, and tailored resume for the specified job role. ' +
+    'Do NOT just repeat what is given. Flesh out the bullet points with strong action verbs and professional phrasing. ' +
+    'Create ATS-optimized resumes in proper Markdown format using # and ## for headers and - for bullet points, with clear spacing and bold **text** for emphasis.';
 
   const userPrompt =
-    `Create an ATS-optimized resume:\n` +
+    `Create a highly professional, ATS-optimized resume tailored specifically for the role of ${targetRole}:\n` +
     `Name: ${name}\nEmail: ${email}\nPhone: ${phone}\n` +
-    `Target Role: ${targetRole}\nTarget Company: ${targetCompany || 'General'}\n` +
-    `Summary: ${summary || 'Generate a strong professional summary'}\n` +
+    `Target Role: ${targetRole}\nTarget Company: ${targetCompany || 'General Applications'}\n` +
+    `Summary: ${summary || 'Write a compelling, professional 3-4 line summary highlighting key strengths and career goals for this role.'}\n` +
     `Skills: ${skills}\nEducation: ${education}\n` +
-    `Experience: ${experience || 'Fresher'}\nProjects: ${projects}\n\n` +
-    `Write the complete resume strictly in MARKDOWN format. Use # for Name, ## for section headings (Contact Info, Summary, Skills, Education, Experience, Projects), and bullet points (-) for details. Do not use code blocks.\n` +
+    `Experience: ${experience || 'Entry-Level / Fresher (focus on academic projects, internships, or relevant coursework)'}\n` +
+    `Projects: ${projects}\n\n` +
+    `CRITICAL INSTRUCTIONS:\n` +
+    `1. Write this as a FINAL, professional resume ready to submit. Do NOT write generic "sample" text or placeholders.\n` +
+    `2. Elaborate on the Experience and Projects sections. Use impactful bullet points starting with strong action verbs (e.g., Developed, Engineered, Orchestrated). Where possible, suggest quantifiable achievements.\n` +
+    `3. Tailor the entire tone and vocabulary specifically to the ${targetRole} industry.\n` +
+    `4. Write the complete resume strictly in MARKDOWN format. Use # for Name, ## for section headings (Contact Info, Summary, Skills, Education, Experience, Projects), and bullet points (-) for details. Do not use code blocks.\n` +
     `Timestamp: ${Date.now()}`;
 
   try {
-    const resume = await callGroq(systemPrompt, userPrompt, 2500);
+    const resume = await callGroq(systemPrompt, userPrompt, 3500);
     res.json({ resume });
   } catch (err) {
     console.error('generateResume error:', err.message);
