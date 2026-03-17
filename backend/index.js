@@ -79,7 +79,7 @@ const authenticate = async (req, res, next) => {
 // ── Groq helper ───────────────────────────────────────────────────────────────
 async function callGroq(systemPrompt, userPrompt, maxTokens = 2048) {
   const completion = await groq.chat.completions.create({
-    model: 'llama3-70b-8192',
+    model: 'llama-3.3-70b-versatile',
     messages: [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
