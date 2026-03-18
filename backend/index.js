@@ -258,13 +258,17 @@ app.post('/generateCompany', authenticate, async (req, res) => {
 
   const systemPrompt =
     'You are an expert placement advisor. ' +
-    'Respond ONLY with a valid JSON object. No markdown, no code blocks, no explanation.';
+    'Provide REAL, ACCURATE, and HIGHLY SPECIFIC data for the requested company and role. ' +
+    'DO NOT use any emojis under any circumstances. ' +
+    'Respond ONLY with a valid JSON object containing strings formatted in Markdown. No outer markdown block around the JSON.';
 
   const userPrompt =
-    `Company placement guide for ${company} - ${role} role. ` +
+    `Generate a comprehensive company placement guide specifically for the company: "${company}" and role: "${role}". ` +
+    `Ensure the information is completely real and tailored to this specific company and role, not generic advice. ` +
+    `Format the text inside each JSON value using clean Markdown (e.g., bullet points, bold text). DO NOT use emojis. ` +
     `Return ONLY raw JSON object: ` +
-    `{"overview":"company overview","selectionProcess":"rounds description","faqs":"top 10 FAQs with answers","importantTopics":"key topics to study","tips":"tips to crack placement"}\n` +
-    `CRITICAL: Every value MUST be a single long string formatted with \\n for line breaks. DO NOT return any JSON arrays.`;
+    `{"overview":"...","selectionProcess":"...","faqs":"...","importantTopics":"...","tips":"..."}\n` +
+    `CRITICAL: Every value MUST be a single long Markdown-formatted string. DO NOT return any JSON arrays. No emojis.`;
 
   try {
     const raw = await callGroq(systemPrompt, userPrompt, 3000);
