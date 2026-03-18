@@ -80,6 +80,7 @@ const authenticate = async (req, res, next) => {
 async function callGroq(systemPrompt, userPrompt, maxTokens = 2048) {
   const completion = await groq.chat.completions.create({
     model: 'llama-3.3-70b-versatile',
+    response_format: { type: 'json_object' },
     messages: [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
@@ -87,7 +88,7 @@ async function callGroq(systemPrompt, userPrompt, maxTokens = 2048) {
     max_tokens: maxTokens,
     temperature: 0.7,
   });
-  return completion.choices[0]?.message?.content ?? '';
+  return completion.choices[0]?.message?.content ?? '{}';
 }
 
 // ── Safe JSON parsers ─────────────────────────────────────────────────────────
@@ -137,18 +138,19 @@ app.post('/generateAptitude', authenticate, async (req, res) => {
 
   const systemPrompt =
     'You are an expert aptitude question generator for campus placement. ' +
-    'Respond ONLY with a valid JSON array. No markdown, no code blocks, no explanation.';
+    'Respond ONLY with a valid JSON object containing a "questions" array. No markdown, no code blocks, no explanation.';
 
   const userPrompt =
     `[Time: ${Date.now()}] Generate ${count} completely unique, fresh, and different aptitude questions on: "${topic}". ` +
     `Ensure these questions do not repeat from previous requests. ` +
-    `Return ONLY a raw JSON array (no markdown, no \`\`\`json): ` +
-    `[{"id":"1","question":"Q?","options":["A","B","C","D"],"correctIndex":0,"explanation":"Why A is correct","topic":"${topic}","difficulty":"Medium"}]\n` +
-    `CRITICAL INSTRUCTION: You must strictly close the JSON array with ] and do not output anything else.`;
+    `Return ONLY a raw JSON object with a "questions" array (no markdown): ` +
+    `{"questions": [{"id":"1","question":"Q?","options":["A","B","C","D"],"correctIndex":0,"explanation":"Why A is correct","topic":"${topic}","difficulty":"Medium"}]}\n` +
+    `CRITICAL INSTRUCTION: You must strictly close the JSON object with } and do not output anything else.`;
 
   try {
     const raw = await callGroq(systemPrompt, userPrompt, 3000);
-    const questions = parseJsonArray(raw);
+    const parsed = parseJsonObject(raw);
+    const questions = parsed.questions || [];
     res.json({ questions });
   } catch (err) {
     console.error('generateAptitude error:', err.message);
@@ -164,18 +166,19 @@ app.post('/generateQuiz', authenticate, async (req, res) => {
 
   const systemPrompt =
     'You are an expert technical quiz generator for campus placement. ' +
-    'Respond ONLY with a valid JSON array. No markdown, no code blocks, no explanation.';
+    'Respond ONLY with a valid JSON object containing a "questions" array. No markdown, no code blocks, no explanation.';
 
   const userPrompt =
     `[Time: ${Date.now()}] Generate ${count} completely unique, fresh, and different MCQ questions on ${subject} - ${subtopic}. ` +
     `Ensure these questions do not repeat from previous requests. ` +
-    `Mix of easy/medium/hard. Return ONLY raw JSON array: ` +
-    `[{"id":"1","question":"Q?","options":["A","B","C","D"],"correctIndex":0,"explanation":"Why correct","topic":"${subtopic}","difficulty":"Medium"}]\n` +
-    `CRITICAL INSTRUCTION: You must strictly close the JSON array with ] and do not output anything else.`;
+    `Mix of easy/medium/hard. Return ONLY raw JSON object: ` +
+    `{"questions": [{"id":"1","question":"Q?","options":["A","B","C","D"],"correctIndex":0,"explanation":"Why correct","topic":"${subtopic}","difficulty":"Medium"}]}\n` +
+    `CRITICAL INSTRUCTION: You must strictly close the JSON object with } and do not output anything else.`;
 
   try {
     const raw = await callGroq(systemPrompt, userPrompt, 3000);
-    const questions = parseJsonArray(raw);
+    const parsed = parseJsonObject(raw);
+    const questions = parsed.questions || [];
     res.json({ questions });
   } catch (err) {
     console.error('generateQuiz error:', err.message);
@@ -191,18 +194,19 @@ app.post('/generateInterview', authenticate, async (req, res) => {
 
   const systemPrompt =
     'You are an expert interview coach for campus placements. ' +
-    'Respond ONLY with a valid JSON array. No markdown, no code blocks, no explanation.';
+    'Respond ONLY with a valid JSON object containing a "questions" array. No markdown, no code blocks, no explanation.';
 
   const userPrompt =
     `[Time: ${Date.now()}] Generate 10 completely unique, fresh, and different expected ${interviewType} questions for ${jobRole}. ` +
     `Ensure these questions do not repeat from previous requests. ` +
-    `Return ONLY raw JSON array: ` +
-    `[{"question":"Q?","answer":"Detailed answer","tip":"Pro tip","category":"${interviewType}"}]\n` +
-    `CRITICAL INSTRUCTION: You must strictly close the JSON array with ] and do not output anything else.`;
+    `Return ONLY raw JSON object: ` +
+    `{"questions": [{"question":"Q?","answer":"Detailed answer","tip":"Pro tip","category":"${interviewType}"}]}\n` +
+    `CRITICAL INSTRUCTION: You must strictly close the JSON object with } and do not output anything else.`;
 
   try {
     const raw = await callGroq(systemPrompt, userPrompt, 3500);
-    const questions = parseJsonArray(raw);
+    const parsed = parseJsonObject(raw);
+    const questions = parsed.questions || [];
     res.json({ questions });
   } catch (err) {
     console.error('generateInterview error:', err.message);
