@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../models/interview_question_model.dart';
 import '../../../services/api_service.dart';
+import '../../../services/rtdb_service.dart';
 
 class InterviewState {
   final List<InterviewQuestionModel> questions;
@@ -10,6 +11,7 @@ class InterviewState {
   final bool answerRevealed;
   final String jobRole;
   final String interviewType;
+  final int masteredCount;
 
   const InterviewState({
     this.questions = const [],
@@ -19,6 +21,7 @@ class InterviewState {
     this.answerRevealed = false,
     this.jobRole = '',
     this.interviewType = 'Technical Round',
+    this.masteredCount = 0,
   });
 
   InterviewState copyWith({
@@ -29,6 +32,7 @@ class InterviewState {
     bool? answerRevealed,
     String? jobRole,
     String? interviewType,
+    int? masteredCount,
   }) =>
       InterviewState(
         questions: questions ?? this.questions,
@@ -38,6 +42,7 @@ class InterviewState {
         answerRevealed: answerRevealed ?? this.answerRevealed,
         jobRole: jobRole ?? this.jobRole,
         interviewType: interviewType ?? this.interviewType,
+        masteredCount: masteredCount ?? this.masteredCount,
       );
 
   InterviewQuestionModel? get currentQuestion =>
@@ -48,7 +53,8 @@ class InterviewState {
 
 class InterviewNotifier extends StateNotifier<InterviewState> {
   final ApiService _api;
-  InterviewNotifier(this._api) : super(const InterviewState());
+  final RTDBService _rtdb;
+  InterviewNotifier(this._api, this._rtdb) : super(const InterviewState());
 
   Future<void> generate({required String jobRole, required String interviewType}) async {
     state = state.copyWith(
@@ -68,6 +74,7 @@ class InterviewNotifier extends StateNotifier<InterviewState> {
         isLoading: false,
         currentIndex: 0,
         answerRevealed: false,
+        masteredCount: 0,
       );
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -78,11 +85,20 @@ class InterviewNotifier extends StateNotifier<InterviewState> {
   void hideAnswer() => state = state.copyWith(answerRevealed: false);
 
   void nextQuestion() {
+    int newMastered = state.masteredCount;
+    if (!state.answerRevealed) {
+      newMastered++;
+    }
+
     if (state.currentIndex < state.questions.length - 1) {
       state = state.copyWith(
         currentIndex: state.currentIndex + 1,
         answerRevealed: false,
+        masteredCount: newMastered,
       );
+    } else {
+      // Reached the end
+      state = state.copyWith(masteredCount: newMastered);
     }
   }
 
@@ -98,9 +114,15 @@ class InterviewNotifier extends StateNotifier<InterviewState> {
   void goToQuestion(int index) {
     state = state.copyWith(currentIndex: index, answerRevealed: false);
   }
+  @override
+  void dispose() {
+    if (state.masteredCount > 0) {
+      _rtdb.saveInterviewProgress(state.masteredCount);
+    }
+    super.dispose();
+  }
 }
 
-final interviewProvider =
-StateNotifierProvider<InterviewNotifier, InterviewState>(
-      (ref) => InterviewNotifier(ApiService()),
+final interviewProvider = StateNotifierProvider.autoDispose<InterviewNotifier, InterviewState>(
+      (ref) => InterviewNotifier(ApiService(), RTDBService()),
 );

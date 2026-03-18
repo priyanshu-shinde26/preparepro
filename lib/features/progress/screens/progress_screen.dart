@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../services/firestore_service.dart';
+import '../../../services/rtdb_service.dart';
 import '../../../widgets/loading_widget.dart';
 
 class ProgressScreen extends ConsumerWidget {
@@ -25,10 +25,11 @@ class _ProgressBody extends StatefulWidget {
 }
 
 class _ProgressBodyState extends State<_ProgressBody> {
-  final _firestoreService = FirestoreService();
+  final _rtdbService = RTDBService();
   Map<String, dynamic> _userStats = {};
   Map<String, int> _subjectScores = {};
   Map<String, int> _aptitudeStats = {};
+  int _interviewMastered = 0;
   bool _isLoading = true;
 
   @override
@@ -39,12 +40,13 @@ class _ProgressBodyState extends State<_ProgressBody> {
 
   Future<void> _load() async {
     try {
-      final results = await _firestoreService.getAllUserStats();
+      final results = await _rtdbService.getAllUserStats();
       if (!mounted) return;
       setState(() {
         _userStats = results['userStats'] as Map<String, dynamic>;
         _subjectScores = results['subjectScores'] as Map<String, int>;
         _aptitudeStats = results['aptitudeStats'] as Map<String, int>;
+        _interviewMastered = results['interviewMastered'] as int;
         _isLoading = false;
       });
     } catch (_) {
@@ -71,13 +73,14 @@ class _ProgressBodyState extends State<_ProgressBody> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Summary cards
-            Row(
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
               children: [
-                _SummaryCard(label: 'Quizzes\nTaken', value: '$quizTotal', icon: Icons.quiz_rounded, gradient: AppTheme.cardGradients[0]),
-                const SizedBox(width: 12),
-                _SummaryCard(label: 'Aptitude\nSolved', value: '$aptTotal', icon: Icons.calculate_rounded, gradient: AppTheme.cardGradients[1]),
-                const SizedBox(width: 12),
-                _SummaryCard(label: 'Subjects\nCovered', value: '${_subjectScores.length}', icon: Icons.book_rounded, gradient: AppTheme.cardGradients[2]),
+                SizedBox(width: (MediaQuery.of(context).size.width - 52) / 2, child: _SummaryCard(label: 'Quizzes\nTaken', value: '$quizTotal', icon: Icons.quiz_rounded, gradient: AppTheme.cardGradients[0])),
+                SizedBox(width: (MediaQuery.of(context).size.width - 52) / 2, child: _SummaryCard(label: 'Aptitude\nSolved', value: '$aptTotal', icon: Icons.calculate_rounded, gradient: AppTheme.cardGradients[1])),
+                SizedBox(width: (MediaQuery.of(context).size.width - 52) / 2, child: _SummaryCard(label: 'Subjects\nCovered', value: '${_subjectScores.length}', icon: Icons.book_rounded, gradient: AppTheme.cardGradients[2])),
+                SizedBox(width: (MediaQuery.of(context).size.width - 52) / 2, child: _SummaryCard(label: 'Interview\nMastered', value: '$_interviewMastered', icon: Icons.co_present_rounded, gradient: AppTheme.cardGradients[3])),
               ],
             ).animate().fadeIn(delay: 100.ms),
 

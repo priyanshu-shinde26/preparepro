@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../models/question_model.dart';
 import '../../../services/api_service.dart';
-import '../../../services/firestore_service.dart';
+import '../../../services/rtdb_service.dart';
 
 class AptitudeState {
   final List<QuestionModel> questions;
@@ -57,9 +57,9 @@ class AptitudeState {
 
 class AptitudeNotifier extends StateNotifier<AptitudeState> {
   final ApiService _api;
-  final FirestoreService _firestore;
+  final RTDBService _rtdb;
 
-  AptitudeNotifier(this._api, this._firestore) : super(const AptitudeState());
+  AptitudeNotifier(this._api, this._rtdb) : super(const AptitudeState());
 
   static const List<String> topics = [
     'General Aptitude',
@@ -100,8 +100,8 @@ class AptitudeNotifier extends StateNotifier<AptitudeState> {
       answered: true,
       correctCount: isCorrect ? state.correctCount + 1 : state.correctCount,
     );
-    // Save to Firestore
-    _firestore.saveAptitudeResult(
+    // Save to RTDB
+    _rtdb.saveAptitudeResult(
       isCorrect: isCorrect,
       topic: state.selectedTopic,
     );
@@ -143,5 +143,5 @@ class AptitudeNotifier extends StateNotifier<AptitudeState> {
 
 final aptitudeProvider =
 StateNotifierProvider<AptitudeNotifier, AptitudeState>((ref) {
-  return AptitudeNotifier(ApiService(), FirestoreService());
+  return AptitudeNotifier(ApiService(), RTDBService());
 });

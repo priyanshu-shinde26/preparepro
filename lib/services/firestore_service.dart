@@ -88,7 +88,19 @@ class FirestoreService {
   }
 
   Future<Map<String, dynamic>> getAllUserStats() async {
-    final doc = await _userDoc.get();
+    DocumentSnapshot doc;
+    try {
+      // Try fetching from server and cache, with a short timeout to prevent long hangs
+      doc = await _userDoc.get(const GetOptions(source: Source.serverAndCache)).timeout(const Duration(seconds: 5));
+    } catch (_) {
+      // If offline or timed out, strictly use the local cache which contains the recent quizzes
+      try {
+        doc = await _userDoc.get(const GetOptions(source: Source.cache));
+      } catch (e) {
+        return {};
+      }
+    }
+
     final data = doc.data() as Map<String, dynamic>? ?? {};
 
     // Compute subject scores

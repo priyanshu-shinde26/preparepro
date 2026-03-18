@@ -3,12 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/theme_provider.dart';
 import '../../../widgets/gradient_card.dart';
-import '../../../services/firestore_service.dart';
+import '../../../services/rtdb_service.dart';
 import '../../../services/auth_service.dart';
 import '../../../services/api_service.dart';
 
@@ -20,7 +19,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  final _firestoreService = FirestoreService();
+  final _rtdbService = RTDBService();
   final _apiService = ApiService();
   bool _serverReady = false;
   bool _serverPinging = true;
@@ -118,8 +117,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -385,9 +384,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildStatsRow() {
     return FutureBuilder<Map<String, dynamic>>(
-      future: _firestoreService.getUserStats(),
+      future: _rtdbService.getAllUserStats(),
       builder: (context, snapshot) {
-        final data = snapshot.data ?? {};
+        final result = snapshot.data ?? {};
+        final data = result['userStats'] as Map<String, dynamic>? ?? {};
         final quizzes = data['totalQuizzesTaken'] ?? 0;
         final aptitude = data['totalAptitudeSolved'] ?? 0;
         final streak = data['streak'] ?? 0;

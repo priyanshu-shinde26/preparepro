@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../models/question_model.dart';
 import '../../../services/api_service.dart';
-import '../../../services/firestore_service.dart';
+import '../../../services/rtdb_service.dart';
 
 enum QuizPhase { setup, loading, inProgress, result }
 
@@ -73,10 +73,10 @@ class QuizState {
 
 class QuizNotifier extends StateNotifier<QuizState> {
   final ApiService _api;
-  final FirestoreService _firestore;
+  final RTDBService _rtdb;
   Timer? _timer;
 
-  QuizNotifier(this._api, this._firestore) : super(const QuizState());
+  QuizNotifier(this._api, this._rtdb) : super(const QuizState());
 
   void selectSubject(String s) => state = state.copyWith(subject: s, subtopic: '');
   void selectSubtopic(String s) => state = state.copyWith(subtopic: s);
@@ -163,7 +163,7 @@ class QuizNotifier extends StateNotifier<QuizState> {
       'timedOut': a.timedOut,
     }).toList();
 
-    await _firestore.saveQuizResult(
+    await _rtdb.saveQuizResult(
       subject: state.subject,
       subtopic: state.subtopic.isNotEmpty ? state.subtopic : state.customTopic,
       score: state.score,
@@ -185,5 +185,5 @@ class QuizNotifier extends StateNotifier<QuizState> {
 }
 
 final quizProvider = StateNotifierProvider<QuizNotifier, QuizState>(
-      (ref) => QuizNotifier(ApiService(), FirestoreService()),
+      (ref) => QuizNotifier(ApiService(), RTDBService()),
 );
