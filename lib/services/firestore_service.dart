@@ -29,11 +29,18 @@ class FirestoreService {
       'timestamp': FieldValue.serverTimestamp(),
     });
 
-    // Update user stats
-    batch.update(_userDoc, {
+    // Update user stats with aggregate optimizations
+    batch.set(_userDoc, {
       'totalQuizzesTaken': FieldValue.increment(1),
       'lastActive': FieldValue.serverTimestamp(),
-    });
+      'subjectStats': {
+        subject: {
+          'totalScore': FieldValue.increment(score),
+          'totalMax': FieldValue.increment(total),
+          'quizzesTaken': FieldValue.increment(1),
+        }
+      }
+    }, SetOptions(merge: true));
 
     await batch.commit();
   }
@@ -49,9 +56,10 @@ class FirestoreService {
       'timestamp': FieldValue.serverTimestamp(),
     });
 
-    await _userDoc.update({
+    await _userDoc.set({
       'totalAptitudeSolved': FieldValue.increment(1),
-    });
+      'totalAptitudeCorrect': FieldValue.increment(isCorrect ? 1 : 0),
+    }, SetOptions(merge: true));
   }
 
   // ── Bookmarks ─────────────────────────────────────────────
@@ -79,6 +87,34 @@ class FirestoreService {
     return doc.data() as Map<String, dynamic>? ?? {};
   }
 
+  Future<Map<String, dynamic>> getAllUserStats() async {
+    final doc = await _userDoc.get();
+    final data = doc.data() as Map<String, dynamic>? ?? {};
+
+    // Compute subject scores
+    final subs = data['subjectStats'] as Map<String, dynamic>? ?? {};
+    final Map<String, int> percentages = {};
+    for (var entry in subs.entries) {
+      final stat = entry.value as Map<String, dynamic>;
+      final max = (stat['totalMax'] ?? 0) as num;
+      if (max > 0) {
+        final score = (stat['totalScore'] ?? 0) as num;
+        percentages[entry.key] = (score / max * 100).round();
+      }
+    }
+
+    // Compute aptitude stats
+    final total = (data['totalAptitudeSolved'] ?? 0) as int;
+    final correct = (data['totalAptitudeCorrect'] ?? 0) as int;
+    final aptitudeStats = {'correct': correct, 'total': total, 'incorrect': total > correct ? total - correct : 0};
+
+    return {
+      'userStats': data,
+      'subjectScores': percentages,
+      'aptitudeStats': aptitudeStats,
+    };
+  }
+
   Stream<QuerySnapshot> getQuizResults({int limit = 20}) {
     return _userDoc
         .collection('quiz_results')
@@ -88,31 +124,30 @@ class FirestoreService {
   }
 
   Future<Map<String, int>> getSubjectScores() async {
-    final results = await _userDoc.collection('quiz_results').get();
-    final Map<String, List<int>> subjectMap = {};
+    final doc = await _userDoc.get();
+    final data = doc.data() as Map<String, dynamic>? ?? {};
+    final subs = data['subjectStats'] as Map<String, dynamic>? ?? {};
 
-    for (final doc in results.docs) {
-      final data = doc.data();
-      final subject = data['subject'] as String;
-      final pct = data['percentage'] as int;
-      subjectMap.putIfAbsent(subject, () => []).add(pct);
+    final Map<String, int> percentages = {};
+    for (var entry in subs.entries) {
+      final stat = entry.value as Map<String, dynamic>;
+      final max = (stat['totalMax'] ?? 0) as num;
+      if (max > 0) {
+        final score = (stat['totalScore'] ?? 0) as num;
+        percentages[entry.key] = (score / max * 100).round();
+      }
     }
-
-    return subjectMap.map((k, v) => MapEntry(
-      k,
-      (v.reduce((a, b) => a + b) / v.length).round(),
-    ));
+    return percentages;
   }
 
   Future<Map<String, int>> getAptitudeStats() async {
-    final results = await _userDoc.collection('aptitude_results').get();
-    int correct = 0;
-    int total = results.docs.length;
-
-    for (final doc in results.docs) {
-      if (doc.data()['isCorrect'] == true) correct++;
-    }
-    return {'correct': correct, 'total': total, 'incorrect': total - correct};
+    final doc = await _userDoc.get();
+    final data = doc.data() as Map<String, dynamic>? ?? {};
+    
+    final total = (data['totalAptitudeSolved'] ?? 0) as int;
+    final correct = (data['totalAptitudeCorrect'] ?? 0) as int;
+    
+    return {'correct': correct, 'total': total, 'incorrect': total > correct ? total - correct : 0};
   }
 
   // ── Daily Challenge ───────────────────────────────────────

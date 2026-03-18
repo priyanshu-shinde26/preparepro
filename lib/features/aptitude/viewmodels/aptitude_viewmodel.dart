@@ -12,6 +12,7 @@ class AptitudeState {
   final bool answered;
   final int correctCount;
   final String selectedTopic;
+  final bool hasStarted;
 
   const AptitudeState({
     this.questions = const [],
@@ -22,6 +23,7 @@ class AptitudeState {
     this.answered = false,
     this.correctCount = 0,
     this.selectedTopic = 'General Aptitude',
+    this.hasStarted = false,
   });
 
   AptitudeState copyWith({
@@ -33,6 +35,7 @@ class AptitudeState {
     bool? answered,
     int? correctCount,
     String? selectedTopic,
+    bool? hasStarted,
   }) =>
       AptitudeState(
         questions: questions ?? this.questions,
@@ -43,6 +46,7 @@ class AptitudeState {
         answered: answered ?? this.answered,
         correctCount: correctCount ?? this.correctCount,
         selectedTopic: selectedTopic ?? this.selectedTopic,
+        hasStarted: hasStarted ?? this.hasStarted,
       );
 
   QuestionModel? get currentQuestion =>
@@ -81,6 +85,7 @@ class AptitudeNotifier extends StateNotifier<AptitudeState> {
         currentIndex: 0,
         selectedOption: null,
         answered: false,
+        hasStarted: true,
       );
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -123,8 +128,16 @@ class AptitudeNotifier extends StateNotifier<AptitudeState> {
   }
 
   void changeTopic(String topic) {
-    state = state.copyWith(selectedTopic: topic);
-    loadQuestions(topic: topic);
+    state = state.copyWith(
+      selectedTopic: topic,
+      hasStarted: false,
+      questions: [],
+      currentIndex: 0,
+      answered: false,
+      selectedOption: null,
+      correctCount: 0,
+      error: null,
+    );
   }
 }
 

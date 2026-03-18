@@ -24,6 +24,13 @@ class DefaultFirebaseOptions {
 
   // ── Replace these with your actual values from Firebase Console ──
   static const FirebaseOptions web = FirebaseOptions(
+    apiKey: "REMOVED",
+  authDomain: "preparepro-app.firebaseapp.com",
+  projectId: "preparepro-app",
+  storageBucket: "preparepro-app.firebasestorage.app",
+  messagingSenderId: "127766338564",
+  appId: "1:127766338564:web:3f8271525afea5a1776951",
+  measurementId: "G-DC46D0TPEQ"
 
   );
 

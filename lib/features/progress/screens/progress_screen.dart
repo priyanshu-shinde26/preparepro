@@ -39,19 +39,18 @@ class _ProgressBodyState extends State<_ProgressBody> {
 
   Future<void> _load() async {
     try {
-      final results = await Future.wait([
-        _firestoreService.getUserStats(),
-        _firestoreService.getSubjectScores(),
-        _firestoreService.getAptitudeStats(),
-      ]);
+      final results = await _firestoreService.getAllUserStats();
+      if (!mounted) return;
       setState(() {
-        _userStats = results[0] as Map<String, dynamic>;
-        _subjectScores = results[1] as Map<String, int>;
-        _aptitudeStats = results[2] as Map<String, int>;
+        _userStats = results['userStats'] as Map<String, dynamic>;
+        _subjectScores = results['subjectScores'] as Map<String, int>;
+        _aptitudeStats = results['aptitudeStats'] as Map<String, int>;
         _isLoading = false;
       });
     } catch (_) {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 

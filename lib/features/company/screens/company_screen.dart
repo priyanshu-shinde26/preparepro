@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../widgets/custom_button.dart';
@@ -206,12 +207,19 @@ class _CompanyDataView extends StatelessWidget {
     final data = state.data!;
     final cs = Theme.of(context).colorScheme;
 
+    String extractStringList(dynamic value) {
+      if (value == null) return '';
+      if (value is String) return value;
+      if (value is List) return value.map((e) => e.toString()).join('\n\n');
+      return value.toString();
+    }
+
     final sections = [
-      _SectionData('🏢 Company Overview', data['overview'] ?? '', Icons.info_outline_rounded, AppTheme.primaryBlue),
-      _SectionData('🔄 Selection Process', data['selectionProcess'] ?? '', Icons.timeline_rounded, AppTheme.primaryPurple),
-      _SectionData('❓ Frequently Asked Questions', data['faqs'] ?? '', Icons.quiz_rounded, AppTheme.accentCyan),
-      _SectionData('📚 Important Topics', data['importantTopics'] ?? '', Icons.book_outlined, AppTheme.accentGreen),
-      _SectionData('💡 Tips to Crack', data['tips'] ?? '', Icons.lightbulb_outline_rounded, AppTheme.accentOrange),
+      _SectionData('🏢 Company Overview', extractStringList(data['overview']), Icons.info_outline_rounded, AppTheme.primaryBlue),
+      _SectionData('🔄 Selection Process', extractStringList(data['selectionProcess']), Icons.timeline_rounded, AppTheme.primaryPurple),
+      _SectionData('❓ Frequently Asked Questions', extractStringList(data['faqs']), Icons.quiz_rounded, AppTheme.accentCyan),
+      _SectionData('📚 Important Topics', extractStringList(data['importantTopics']), Icons.book_outlined, AppTheme.accentGreen),
+      _SectionData('💡 Tips to Crack', extractStringList(data['tips']), Icons.lightbulb_outline_rounded, AppTheme.accentOrange),
     ];
 
     return SingleChildScrollView(
@@ -304,9 +312,16 @@ class _ExpandableSectionState extends State<_ExpandableSection> {
             children: [
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                child: Text(
-                  widget.section.content,
-                  style: GoogleFonts.sora(fontSize: 13, height: 1.7, color: cs.onSurface.withOpacity(0.8)),
+                child: MarkdownBody(
+                  data: widget.section.content,
+                  styleSheet: MarkdownStyleSheet(
+                    p: GoogleFonts.sora(fontSize: 13, height: 1.7, color: cs.onSurface.withOpacity(0.8)),
+                    h1: GoogleFonts.sora(fontSize: 18, fontWeight: FontWeight.bold, color: cs.onSurface),
+                    h2: GoogleFonts.sora(fontSize: 16, fontWeight: FontWeight.bold, color: cs.onSurface),
+                    h3: GoogleFonts.sora(fontSize: 15, fontWeight: FontWeight.bold, color: cs.onSurface),
+                    listBullet: TextStyle(color: cs.onSurface.withOpacity(0.8)),
+                    strong: GoogleFonts.sora(fontWeight: FontWeight.w700, color: cs.onSurface),
+                  ),
                 ),
               ),
             ],

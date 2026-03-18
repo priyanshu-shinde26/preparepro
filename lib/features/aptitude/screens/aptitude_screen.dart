@@ -18,7 +18,7 @@ class _AptitudeScreenState extends ConsumerState<AptitudeScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => ref.read(aptitudeProvider.notifier).loadQuestions());
+    // No longer auto-loading here. User will hit Start.
   }
 
   @override
@@ -65,17 +65,59 @@ class _AptitudeScreenState extends ConsumerState<AptitudeScreen> {
           ),
 
           Expanded(
-            child: state.isLoading
-                ? const LoadingWidget(message: 'Generating questions with AI...')
-                : state.error != null
-                ? AppErrorWidget(
-              message: state.error!,
-              onRetry: notifier.loadQuestions,
-            )
-                : state.questions.isEmpty
-                ? const Center(child: Text('No questions found'))
-                : _QuestionView(state: state, notifier: notifier),
+            child: !state.hasStarted && !state.isLoading
+                ? _StartView(state: state, notifier: notifier)
+                : state.isLoading
+                    ? const LoadingWidget(message: 'Generating questions with AI...')
+                    : state.error != null
+                        ? AppErrorWidget(
+                            message: state.error!,
+                            onRetry: notifier.loadQuestions,
+                          )
+                        : state.questions.isEmpty
+                            ? const Center(child: Text('No questions found'))
+                            : _QuestionView(state: state, notifier: notifier),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StartView extends StatelessWidget {
+  final AptitudeState state;
+  final AptitudeNotifier notifier;
+
+  const _StartView({required this.state, required this.notifier});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.quiz_rounded, size: 80, color: Theme.of(context).colorScheme.primary.withOpacity(0.5)),
+          const SizedBox(height: 24),
+          Text(
+            'Ready to practice?',
+            style: GoogleFonts.sora(fontSize: 22, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Topic: ${state.selectedTopic}',
+            style: GoogleFonts.sora(fontSize: 16, color: Colors.grey),
+          ),
+          const SizedBox(height: 32),
+          ElevatedButton.icon(
+            onPressed: () => notifier.loadQuestions(),
+            icon: const Icon(Icons.play_arrow_rounded),
+            label: const Text('Start Quiz'),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+              textStyle: GoogleFonts.sora(fontSize: 18, fontWeight: FontWeight.bold),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            ),
+          ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2),
         ],
       ),
     );

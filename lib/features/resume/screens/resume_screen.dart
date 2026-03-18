@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:printing/printing.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -325,9 +326,16 @@ class _ResumePreview extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: cs.outlineVariant),
               ),
-              child: SelectableText(
-                resumeText,
-                style: GoogleFonts.sora(fontSize: 13, height: 1.7, color: cs.onSurface),
+              child: MarkdownBody(
+                data: resumeText,
+                selectable: true,
+                styleSheet: MarkdownStyleSheet(
+                  p: GoogleFonts.sora(fontSize: 13, height: 1.6, color: cs.onSurface),
+                  h1: GoogleFonts.sora(fontSize: 22, fontWeight: FontWeight.bold, color: cs.primary),
+                  h2: GoogleFonts.sora(fontSize: 18, fontWeight: FontWeight.bold, color: cs.primary),
+                  h3: GoogleFonts.sora(fontSize: 15, fontWeight: FontWeight.bold, color: cs.onSurface),
+                  listBullet: TextStyle(color: cs.onSurface),
+                ),
               ),
             ).animate().fadeIn(duration: 400.ms),
           ),
@@ -363,16 +371,111 @@ class _ResumePreview extends StatelessWidget {
 
   Future<void> _exportPdf(BuildContext context) async {
     final pdf = pw.Document();
+    
+    final lines = resumeText.split('\n');
+    final widgets = <pw.Widget>[];
+
+    String stripMd(String t) {
+      return t.replaceAll('**', '').replaceAll('*', '').replaceAll('__', '');
+    }
+
+    bool inContactInfo = false;
+    List<String> contactParts = [];
+
+    for (var i = 0; i < lines.length; i++) {
+      var line = lines[i];
+      if (line.trim().isEmpty) {
+        if (!inContactInfo && contactParts.isEmpty) {
+          widgets.add(pw.SizedBox(height: 6));
+        }
+        continue;
+      }
+      
+      // Top Level Name
+      if (line.startsWith('# ')) {
+        widgets.add(
+          pw.Center(
+            child: pw.Text(
+              stripMd(line.substring(2)).toUpperCase(),
+              style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold, letterSpacing: 1.2),
+            ),
+          ),
+        );
+        widgets.add(pw.SizedBox(height: 4));
+        inContactInfo = true; // Assume next few lines might be contact info
+      } 
+      // Section Headers
+      else if (line.startsWith('## ')) {
+        if (contactParts.isNotEmpty) {
+           widgets.add(pw.Center(child: pw.Text(contactParts.join('  |  '), style: const pw.TextStyle(fontSize: 10))));
+           widgets.add(pw.SizedBox(height: 12));
+           contactParts.clear();
+        }
+        inContactInfo = false;
+
+        final sectionName = stripMd(line.substring(3)).toUpperCase();
+        widgets.add(pw.SizedBox(height: 12));
+        widgets.add(pw.Text(sectionName, style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold, color: const PdfColor(0.1, 0.1, 0.1))));
+        widgets.add(pw.Divider(thickness: 1, color: const PdfColor(0.2, 0.2, 0.2)));
+        widgets.add(pw.SizedBox(height: 6));
+      } 
+      // Sub-headers (like Roles, Degree Names)
+      else if (line.startsWith('### ')) {
+        inContactInfo = false;
+        widgets.add(pw.Text(stripMd(line.substring(4)), style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold)));
+        widgets.add(pw.SizedBox(height: 4));
+      } 
+      // Bullet points
+      else if (line.trim().startsWith('- ') || line.trim().startsWith('* ')) {
+        inContactInfo = false;
+        final content = line.trim().substring(2);
+        widgets.add(
+          pw.Padding(
+            padding: const pw.EdgeInsets.only(left: 12, bottom: 4),
+            child: pw.Row(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Container(
+                  margin: const pw.EdgeInsets.only(top: 4, right: 6),
+                  width: 3,
+                  height: 3,
+                  decoration: const pw.BoxDecoration(color: PdfColors.black, shape: pw.BoxShape.circle),
+                ),
+                pw.Expanded(child: pw.Text(stripMd(content), style: const pw.TextStyle(fontSize: 10, lineSpacing: 1.5))),
+              ],
+            ),
+          )
+        );
+      } 
+      // Regular text/paragraphs/contact info
+      else {
+        final text = stripMd(line);
+        if (inContactInfo && !text.toLowerCase().startsWith('summary')) {
+           // We try to capture Phone, Email, Location into a single row
+           contactParts.add(text);
+        } else {
+           inContactInfo = false;
+           widgets.add(
+             pw.Padding(
+               padding: const pw.EdgeInsets.only(bottom: 6),
+               child: pw.Text(text, style: const pw.TextStyle(fontSize: 10, lineSpacing: 1.5), textAlign: pw.TextAlign.justify),
+             )
+           );
+        }
+      }
+    }
+
+    // Flush remaining contact parts if any
+    if (contactParts.isNotEmpty) {
+      widgets.add(pw.Center(child: pw.Text(contactParts.join('  |  '), style: const pw.TextStyle(fontSize: 10))));
+      widgets.add(pw.SizedBox(height: 12));
+    }
+
     pdf.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.all(32),
-        build: (pw.Context c) => [
-          pw.Text(
-            resumeText,
-            style: const pw.TextStyle(fontSize: 11),
-          ),
-        ],
+        margin: const pw.EdgeInsets.symmetric(horizontal: 48, vertical: 48), // Professional 1-inch margins
+        build: (pw.Context c) => widgets,
       ),
     );
 
