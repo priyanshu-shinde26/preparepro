@@ -32,7 +32,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.yourcompany.preparepro"
+        applicationId "com.priyanshu.preparepro"
         minSdkVersion 21
         targetSdkVersion flutter.targetSdkVersion
                 versionCode flutterVersionCode.toInteger()
