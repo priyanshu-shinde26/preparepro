@@ -258,17 +258,20 @@ app.post('/generateCompany', authenticate, async (req, res) => {
 
   const systemPrompt =
     'You are an expert placement advisor. ' +
-    'Provide REAL, ACCURATE, and HIGHLY SPECIFIC data for the requested company and role. ' +
+    'Provide REAL, ACCURATE, HIGHLY SPECIFIC, and EXTREMELY CONCISE data for the requested company and role. ' +
     'DO NOT use any emojis under any circumstances. ' +
-    'Respond ONLY with a valid JSON object containing strings formatted in Markdown. No outer markdown block around the JSON.';
+    'Respond ONLY with a valid JSON object containing strings formatted in clean Markdown. No outer markdown block around the JSON.';
 
   const userPrompt =
-    `Generate a comprehensive company placement guide specifically for the company: "${company}" and role: "${role}". ` +
-    `Ensure the information is completely real and tailored to this specific company and role, not generic advice. ` +
-    `Format the text inside each JSON value using clean Markdown (e.g., bullet points, bold text). DO NOT use emojis. ` +
+    `Generate a highly concise, point-wise company placement guide specifically for the company: "${company}" and role: "${role}". ` +
+    `REQUIREMENTS:\n` +
+    `1. Use SHORT, punchy bullet points (max 1-2 lines per point).\n` +
+    `2. DO NOT write long paragraphs. Present information like a quick flowchart, summary, or cheat-sheet.\n` +
+    `3. Format using clean Markdown. YOU MUST use explicit newline characters (\\n) before each bullet point (e.g., "\\n- Point 1\\n- Point 2") so it renders correctly.\n` +
+    `4. DO NOT use emojis. Ensure the information is completely real and tailored to this specific company and role.\n` +
     `Return ONLY raw JSON object: ` +
     `{"overview":"...","selectionProcess":"...","faqs":"...","importantTopics":"...","tips":"..."}\n` +
-    `CRITICAL: Every value MUST be a single long Markdown-formatted string. DO NOT return any JSON arrays. No emojis.`;
+    `CRITICAL: Every value MUST be a single Markdown string containing \\n characters for line breaks. DO NOT return any JSON arrays. No emojis.`;
 
   try {
     const raw = await callGroq(systemPrompt, userPrompt, 3000);
