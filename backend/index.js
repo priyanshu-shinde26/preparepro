@@ -242,11 +242,14 @@ app.post('/generateResume', authenticate, async (req, res) => {
     `1. Write this as a FINAL, professional resume ready to submit. Do NOT write generic "sample" text or placeholders.\n` +
     `2. Elaborate on the Experience and Projects sections. Use impactful bullet points starting with strong action verbs (e.g., Developed, Engineered, Orchestrated). Where possible, suggest quantifiable achievements.\n` +
     `3. Tailor the entire tone and vocabulary specifically to the ${targetRole} industry.\n` +
-    `4. Write the complete resume strictly in MARKDOWN format. Use # for Name, ## for section headings (Contact Info, Summary, Skills, Education, Experience, Projects), and bullet points (-) for details. Do not use code blocks.\n` +
+    `4. Write the complete resume strictly in MARKDOWN format. Use # for Name, ## for section headings, and bullet points. Do not use code blocks.\n` +
+    `5. You MUST return ONLY a valid JSON object strictly matching this structure: {"resume": "YOUR_MARKDOWN_RESUME"}. Do not output any other text or markdown block outside the JSON.\n` +
     `Timestamp: ${Date.now()}`;
 
   try {
-    const resume = await callGroq(systemPrompt, userPrompt, 3500);
+    const raw = await callGroq(systemPrompt, userPrompt, 3500);
+    const parsed = parseJsonObject(raw);
+    const resume = parsed.resume || String(raw);
     res.json({ resume });
   } catch (err) {
     console.error('generateResume error:', err.message);
