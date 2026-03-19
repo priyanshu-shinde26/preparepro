@@ -292,7 +292,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
                   // Daily Challenge Banner
                   _DailyChallengeBanner(
-                    onTap: () => context.go('/quiz'),
+                    onTap: () => context.push('/quiz'),
                   ),
                   const SizedBox(height: 28),
 
@@ -333,7 +333,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         subtitle: f.subtitle,
                         icon: f.icon,
                         gradient: f.gradient,
-                        onTap: () => context.go(f.route),
+                        onTap: () => context.push(f.route),
                         index: i,
                       );
                     },
@@ -354,7 +354,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           FloatingActionButton(
             heroTag: 'leaderboard',
             mini: true,
-            onPressed: () => context.go('/leaderboard'),
+            onPressed: () => context.push('/leaderboard'),
             backgroundColor: AppTheme.accentOrange,
             foregroundColor: Colors.white,
             child: const Icon(Icons.leaderboard_rounded),
@@ -363,7 +363,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           FloatingActionButton(
             heroTag: 'bookmarks',
             mini: true,
-            onPressed: () => context.go('/bookmarks'),
+            onPressed: () => context.push('/bookmarks'),
             backgroundColor: AppTheme.primaryPurple,
             foregroundColor: Colors.white,
             child: const Icon(Icons.bookmark_rounded),
@@ -371,7 +371,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           const SizedBox(height: 8),
           FloatingActionButton.extended(
             heroTag: 'progress',
-            onPressed: () => context.go('/progress'),
+            onPressed: () => context.push('/progress'),
             icon: const Icon(Icons.insights_rounded),
             label: Text('My Progress', style: GoogleFonts.sora(fontWeight: FontWeight.w600)),
             backgroundColor: AppTheme.primaryBlue,

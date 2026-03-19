@@ -12,7 +12,15 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Firebase init
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  try {
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    }
+  } catch (e) {
+    if (!e.toString().contains('duplicate-app')) {
+      rethrow;
+    }
+  }
 
   // Hive (offline cache)
   await Hive.initFlutter();

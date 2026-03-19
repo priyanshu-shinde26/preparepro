@@ -1,4 +1,4 @@
-package com.example.preparepro;
+package com.priyanshu.preparepro;
 
 import io.flutter.embedding.android.FlutterActivity;
 
