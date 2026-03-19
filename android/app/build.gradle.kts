@@ -1,59 +1,61 @@
-def localProperties = new Properties()
-def localPropertiesFile = rootProject.file('local.properties')
+import java.util.Properties
+
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
 if (localPropertiesFile.exists()) {
-    localPropertiesFile.withReader('UTF-8') { reader ->
-        localProperties.load(reader)
-    }
+    localPropertiesFile.inputStream().use { localProperties.load(it) }
 }
 
-def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
-if (flutterVersionCode == null) flutterVersionCode = '1'
+val flutterVersionCode = localProperties.getProperty("flutter.versionCode") ?: "1"
+val flutterVersionName = localProperties.getProperty("flutter.versionName") ?: "1.0"
 
-def flutterVersionName = localProperties.getProperty('flutter.versionName')
-if (flutterVersionName == null) flutterVersionName = '1.0'
-
-apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
-apply plugin: 'dev.flutter.flutter-gradle-plugin'
-apply plugin: 'com.google.gms.google-services'   // Firebase
+plugins {
+    id("com.android.application")
+    id("kotlin-android")
+    id("dev.flutter.flutter-gradle-plugin")
+    id("com.google.gms.google-services")
+}
 
 android {
-    namespace "com.preparepro.app"
-    compileSdk flutter.compileSdkVersion
-            ndkVersion flutter.ndkVersion
+    namespace = "com.priyanshu.preparepro"
+    compileSdk = flutter.compileSdkVersion
+    ndkVersion = flutter.ndkVersion
 
-            compileOptions {
-                sourceCompatibility JavaVersion.VERSION_1_8
-                        targetCompatibility JavaVersion.VERSION_1_8
-            }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
 
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = "1.8"
     }
 
     defaultConfig {
-        applicationId "com.priyanshu.preparepro"
-        minSdkVersion 21
-        targetSdkVersion flutter.targetSdkVersion
-                versionCode flutterVersionCode.toInteger()
-        versionName flutterVersionName
-                multiDexEnabled true
+        applicationId = "com.priyanshu.preparepro"
+        minSdk = flutter.minSdkVersion
+        targetSdk = flutter.targetSdkVersion
+        versionCode = flutterVersionCode.toInt()
+        versionName = flutterVersionName
+        multiDexEnabled = true
     }
 
     buildTypes {
         release {
-            signingConfig signingConfigs.debug
-                    minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig = signingConfigs.getByName("debug")
+            isMinifyEnabled = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 }
 
 flutter {
-    source '../..'
+    source = "../.."
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation 'androidx.multidex:multidex:2.0.1'
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:${rootProject.extra["kotlin_version"]}")
+    implementation("androidx.multidex:multidex:2.0.1")
 }
