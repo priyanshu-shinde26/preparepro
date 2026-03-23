@@ -5,7 +5,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/providers/theme_provider.dart';
-import '../../../services/auth_service.dart';
+
+// ✅ FIX: Changed from:
+//    import '../../../services/auth_service.dart';
+// To this — authServiceProvider is a Riverpod Provider defined in auth_provider.dart
+//    not a class from auth_service.dart
+import '../../../core/providers/auth_provider.dart';
 
 class HomeHeader extends ConsumerWidget {
   final User? user;
@@ -111,9 +116,9 @@ class HomeHeader extends ConsumerWidget {
                     backgroundImage: user?.photoURL != null ? NetworkImage(user!.photoURL!) : null,
                     child: user?.photoURL == null
                         ? Text(
-                            (user?.displayName ?? 'U')[0].toUpperCase(),
-                            style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: cs.primary),
-                          )
+                      (user?.displayName ?? 'U')[0].toUpperCase(),
+                      style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: cs.primary),
+                    )
                         : null,
                   ).animate().scale(delay: 200.ms, curve: Curves.easeOutBack),
                 ],
